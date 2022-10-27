@@ -21,11 +21,11 @@ class UsersController < ApplicationController
 
   # POST /users
   def create
+   
     @user = User.new(user_params)
 
-    if @user.save
-      # session[:user_id] = @user.id  
-      UserMailer.registration_confirmation(@user).deliver_now
+    if @user.save 
+      BaseWorkerJob.perform_async(@user.id)
       redirect_to login_path, notice: "Successfully Created" 
       # redirect_to @user, notice: 'User was successfully created.'
     else
@@ -50,9 +50,9 @@ class UsersController < ApplicationController
 
 
   def confirm_email
-    user = User.find_by_confirm_token(params[:id])
-    if user
-      user.email_activate
+    @user = User.find_by_confirm_token(params[:id])
+    if @user
+      @user.email_activate
       flash[:success] = "Welcome to the Sample App! Your email has been confirmed.
       Please sign in to continue."
       redirect_to login_path
@@ -62,6 +62,7 @@ class UsersController < ApplicationController
     end
  end
 
+ 
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_user
